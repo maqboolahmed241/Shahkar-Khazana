@@ -26,6 +26,7 @@ jobs:
           cd buildapp
           cordova platform add android@13
           cordova plugin add ../backup-picker-plugin
+          cordova plugin add ../contact-picker-plugin
           cordova build android --debug
       - name: Prepare APK
         run: |
