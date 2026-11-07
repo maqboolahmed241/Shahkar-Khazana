@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="com.maqboolahmed.backuppicker" version="1.0.0">
+  <name>BackupPicker</name>
+  <js-module src="www/BackupPicker.js" name="BackupPicker">
+    <clobbers target="cordova.plugins.backupPicker" />
+  </js-module>
+  <platform name="android">
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="BackupPicker">
+        <param name="android-package" value="com.maqboolahmed.backuppicker.BackupPicker" />
+      </feature>
+    </config-file>
+    <source-file src="src/android/BackupPicker.java" target-dir="src/com/maqboolahmed/backuppicker" />
+  </platform>
+</plugin>

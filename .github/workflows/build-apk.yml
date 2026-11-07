@@ -25,6 +25,7 @@ jobs:
           cp index.html buildapp/www/index.html
           cd buildapp
           cordova platform add android@13
+          cordova plugin add ../backup-picker-plugin
           cordova build android --debug
       - name: Prepare APK
         run: |
