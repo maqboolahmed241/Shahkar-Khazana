@@ -1,0 +1,10 @@
+{
+  "name": "com.maqboolahmed.contactpicker",
+  "version": "1.0.0",
+  "description": "Native Android contact picker for Shahkar Khazana",
+  "cordova": {
+    "id": "com.maqboolahmed.contactpicker",
+    "platforms": ["android"]
+  },
+  "keywords": ["ecosystem:cordova", "cordova-android"]
+}
