@@ -27,7 +27,6 @@ public class ContactPicker extends CordovaPlugin {
             try {
                 Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setData(ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
-                intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 cordova.startActivityForResult(this, intent, REQUEST_PICK_CONTACT);
             } catch (Exception e) {
