@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="com.maqboolahmed.contactpicker" version="1.0.0">
+  <name>ContactPicker</name>
+  <js-module src="www/ContactPicker.js" name="ContactPicker">
+    <clobbers target="cordova.plugins.contactPicker" />
+  </js-module>
+  <platform name="android">
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="ContactPicker">
+        <param name="android-package" value="com.maqboolahmed.contactpicker.ContactPicker" />
+      </feature>
+    </config-file>
+    <source-file src="src/android/ContactPicker.java" target-dir="src/com/maqboolahmed/contactpicker" />
+  </platform>
+</plugin>
