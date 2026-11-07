@@ -23,14 +23,19 @@ public class ContactPicker extends CordovaPlugin {
             return true;
         }
         pendingCallback = callbackContext;
-        try {
-            Intent intent = new Intent(Intent.ACTION_PICK);
-            intent.setData(ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
-            cordova.startActivityForResult(this, intent, REQUEST_PICK_CONTACT);
-        } catch (Exception e) {
-            pendingCallback = null;
-            callbackContext.error("Unable to open contacts: " + e.getMessage());
-        }
+        cordova.getActivity().runOnUiThread(() -> {
+            try {
+                Intent intent = new Intent(Intent.ACTION_PICK);
+                intent.setData(ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
+                intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                cordova.startActivityForResult(this, intent, REQUEST_PICK_CONTACT);
+            } catch (Exception e) {
+                CallbackContext cb = pendingCallback;
+                pendingCallback = null;
+                if (cb != null) cb.error("Unable to open contacts: " + e.getMessage());
+            }
+        });
         return true;
     }
 
