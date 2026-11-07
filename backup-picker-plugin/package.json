@@ -1,0 +1,15 @@
+{
+  "name": "com.maqboolahmed.backuppicker",
+  "version": "1.0.0",
+  "description": "Android system save-file picker for Shahkar Khazana backups",
+  "cordova": {
+    "id": "com.maqboolahmed.backuppicker",
+    "platforms": [
+      "android"
+    ]
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android"
+  ]
+}
