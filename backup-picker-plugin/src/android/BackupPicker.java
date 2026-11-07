@@ -23,15 +23,25 @@ public class BackupPicker extends CordovaPlugin {
             callbackContext.error("A save operation is already running");
             return true;
         }
-        String filename = args.getString(0);
-        pendingJson = args.getString(1);
+        final String filename = args.getString(0);
+        final String json = args.getString(1);
+        pendingJson = json;
         pendingCallback = callbackContext;
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("application/json");
-        intent.putExtra(Intent.EXTRA_TITLE, filename);
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        cordova.startActivityForResult(this, intent, REQUEST_CREATE_DOCUMENT);
+        cordova.getActivity().runOnUiThread(() -> {
+            try {
+                Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("application/json");
+                intent.putExtra(Intent.EXTRA_TITLE, filename);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                cordova.startActivityForResult(this, intent, REQUEST_CREATE_DOCUMENT);
+            } catch (Exception e) {
+                CallbackContext cb = pendingCallback;
+                pendingCallback = null;
+                pendingJson = null;
+                if (cb != null) cb.error("Unable to open save location: " + e.getMessage());
+            }
+        });
         return true;
     }
 
@@ -46,12 +56,10 @@ public class BackupPicker extends CordovaPlugin {
             return;
         }
         Uri uri = intent.getData();
-        try {
-            OutputStream output = cordova.getActivity().getContentResolver().openOutputStream(uri, "w");
+        try (OutputStream output = cordova.getActivity().getContentResolver().openOutputStream(uri, "wt")) {
             if (output == null) throw new Exception("Unable to open selected file");
             output.write(pendingJson.getBytes(StandardCharsets.UTF_8));
             output.flush();
-            output.close();
             pendingJson = null;
             JSONObject result = new JSONObject();
             result.put("saved", true);
