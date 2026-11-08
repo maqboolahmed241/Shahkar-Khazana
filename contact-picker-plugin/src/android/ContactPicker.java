@@ -1,7 +1,9 @@
 package com.maqboolahmed.contactpicker;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
@@ -12,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ContactPicker extends CordovaPlugin {
+    private static final int REQUEST_CONTACT_PERMISSION = 48172;
     private static final int REQUEST_PICK_CONTACT = 48173;
     private CallbackContext pendingCallback;
 
@@ -25,17 +28,43 @@ public class ContactPicker extends CordovaPlugin {
         pendingCallback = callbackContext;
         cordova.getActivity().runOnUiThread(() -> {
             try {
-                Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setData(ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                cordova.startActivityForResult(this, intent, REQUEST_PICK_CONTACT);
+                if (cordova.hasPermission(Manifest.permission.READ_CONTACTS)) {
+                    openContactPicker();
+                } else {
+                    cordova.requestPermission(this, REQUEST_CONTACT_PERMISSION, Manifest.permission.READ_CONTACTS);
+                }
             } catch (Exception e) {
-                CallbackContext cb = pendingCallback;
-                pendingCallback = null;
-                if (cb != null) cb.error("Unable to open contacts: " + e.getMessage());
+                fail("Unable to request contacts permission: " + e.getMessage());
             }
         });
         return true;
+    }
+
+    private void openContactPicker() {
+        try {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setData(ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            cordova.startActivityForResult(this, intent, REQUEST_PICK_CONTACT);
+        } catch (Exception e) {
+            fail("Unable to open contacts: " + e.getMessage());
+        }
+    }
+
+    private void fail(String message) {
+        CallbackContext cb = pendingCallback;
+        pendingCallback = null;
+        if (cb != null) cb.error(message);
+    }
+
+    @Override
+    public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+        if (requestCode != REQUEST_CONTACT_PERMISSION || pendingCallback == null) return;
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            openContactPicker();
+        } else {
+            fail("Contacts permission denied. Allow Contacts permission in Android App settings and try again.");
+        }
     }
 
     @Override
