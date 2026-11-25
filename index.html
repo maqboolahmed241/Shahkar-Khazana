@@ -97,8 +97,17 @@ $('amanatEntryForm').addEventListener('submit',e=>{
  if(!personId){toast('امانت دار شخص منتخب کریں');return;}if(!Number.isFinite(amount)||amount<=0){toast('درست رقم درج کریں');return;}
  if(type==='withdraw'&&amount>amanatTotals(personId).balance){toast('واپسی کی رقم باقی امانت سے زیادہ نہیں ہوسکتی');return;}
  db.amanatEntries.push({id:'am'+Date.now()+Math.random().toString(16).slice(2,6),personId,type,amount,date:$('amanatDate').value,note:$('amanatNote').value.trim(),created:Date.now()});
+ const p=db.people.find(x=>x.id===personId),newBalance=amanatTotals(personId).balance,totalDeposited=amanatTotals(personId).deposits;
  save();closeModal('amanatEntryModal');openAmanat();toast(type==='deposit'?'امانت جمع ہوگئی':'امانت کی واپسی محفوظ ہوگئی');
+ if(type==='withdraw')openAmanatSms(p,amount,newBalance,totalDeposited);
 });
+function openAmanatSms(person,withdrawn,balance,totalDeposited){
+ if(!person||!person.phone){toast('امانت دار کا موبائل نمبر درج نہیں؛ افراد میں نمبر شامل کریں');return;}
+ const number=phoneForLink(person.phone);
+ const msg='محترم '+person.name+' صاحب!\nآپ نے اپنی امانت میں سے '+money(withdrawn)+' وصول کیے ہیں۔\nکل امانت: '+money(totalDeposited)+'\nآج وصول شدہ رقم: '+money(withdrawn)+'\nباقی امانت: '+money(balance)+'\n\nشکریہ، شاہکار خزانہ';
+ const url='sms:'+number+'?body='+encodeURIComponent(msg);
+ window.open(url,'_system');
+}
 function showAmanatDetail(id){
  selectedAmanatPerson=id;const p=db.people.find(x=>x.id===id);if(!p)return;const arr=db.amanatEntries.filter(e=>e.personId===id).sort((a,b)=>a.date.localeCompare(b.date)||a.created-b.created),t=amanatTotals(id);
  $('amanatDetailTitle').textContent=p.name+' کی امانت';$('amanatDetailBody').innerHTML='<div class="reportline"><span>کل جمع</span><b>'+money(t.deposits)+'</b></div><div class="reportline"><span>کل واپسی</span><b>'+money(t.withdrawals)+'</b></div><div class="reportline"><strong>باقی امانت</strong><b>'+money(t.balance)+'</b></div><div class="section"><h2>تاریخ وار لین دین</h2></div>'+(arr.length?arr.map(e=>'<div class="item"><div class="avatar">'+(e.type==='deposit'?'＋':'−')+'</div><div class="desc"><b>'+(e.type==='deposit'?'امانت جمع':'امانت واپس')+'</b><small>'+esc(e.date)+(e.note?' · '+esc(e.note):'')+'</small><button class="smallbtn" onclick="deleteAmanatEntry(\''+e.id+'\')">اندراج حذف</button></div><div class="amt '+(e.type==='deposit'?'pos':'neg')+'">'+(e.type==='deposit'?'+':'−')+money(e.amount)+'</div></div>').join(''):'<div class="empty">کوئی اندراج نہیں</div>');
