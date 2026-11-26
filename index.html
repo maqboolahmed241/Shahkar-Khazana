@@ -83,8 +83,17 @@ function openAmanat(){
  const all=amanatTotals();
  $('amanatDeposits').textContent=money(all.deposits);$('amanatWithdrawals').textContent=money(all.withdrawals);$('amanatBalance').textContent=money(all.balance);$('amanatTotal').textContent=money(all.balance);
  const ids=[...new Set(db.amanatEntries.map(e=>e.personId))];
- $('amanatPeople').innerHTML=ids.length?ids.map(id=>{const p=db.people.find(x=>x.id===id);if(!p)return '';const t=amanatTotals(id);return '<div class="personcard"><b>'+esc(p.name)+'</b><small>'+esc(p.phone||'فون نمبر درج نہیں')+' · جمع: '+money(t.deposits)+' · واپس: '+money(t.withdrawals)+' · باقی امانت: <strong>'+money(t.balance)+'</strong></small><button class="smallbtn" onclick="openAmanatEntry(\'deposit\',\''+id+'\')">＋ مزید جمع</button> <button class="smallbtn" onclick="openAmanatEntry(\'withdraw\',\''+id+'\')">− واپسی</button> <button class="smallbtn" onclick="showAmanatDetail(\''+id+'\')">تفصیل</button></div>';}).join(''):'<div class="empty">ابھی کوئی امانت درج نہیں۔<br>پہلے نیا امانت دار شامل کریں یا رقم جمع کریں۔</div>';
+ $('amanatPeople').innerHTML=ids.length?ids.map(id=>{const p=db.people.find(x=>x.id===id);if(!p)return '';const t=amanatTotals(id);return '<div class="personcard"><b>'+esc(p.name)+'</b><small>'+esc(p.phone||'فون نمبر درج نہیں')+' · جمع: '+money(t.deposits)+' · واپس: '+money(t.withdrawals)+' · باقی امانت: <strong>'+money(t.balance)+'</strong></small><button class="smallbtn" onclick="openAmanatEntry(\'deposit\',\''+id+'\')">＋ مزید جمع</button> <button class="smallbtn" onclick="openAmanatEntry(\'withdraw\',\''+id+'\')">− واپسی</button> <button class="smallbtn" onclick="showAmanatDetail(\''+id+'\')">تفصیل</button><div class="buttons" style="margin-top:9px"><button class="smallbtn" onclick="shareAmanatSummary(\'whatsapp\',\''+id+'\')">WhatsApp شیئر</button><button class="smallbtn" onclick="shareAmanatSummary(\'sms\',\''+id+'\')">SMS شیئر</button></div></div>';}).join(''):'<div class="empty">ابھی کوئی امانت درج نہیں۔<br>پہلے نیا امانت دار شامل کریں یا رقم جمع کریں۔</div>';
  openModal('amanatModal');
+}
+function shareAmanatSummary(channel,id){
+ const p=db.people.find(x=>x.id===id);if(!p){toast('امانت دار کا ریکارڈ نہیں ملا');return;}
+ if(!p.phone){toast('اس امانت دار کا موبائل نمبر درج نہیں؛ افراد میں نمبر شامل کریں');return;}
+ const t=amanatTotals(id),arr=db.amanatEntries.filter(e=>e.personId===id).sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.created||0)-(b.created||0)),last=arr[arr.length-1];
+ let update='آپ کے کھاتے میں تازہ ترین اندراج: '+(last?(last.type==='deposit'?'امانت جمع کروائی گئی':'امانت میں سے رقم واپس لی گئی')+'، رقم '+money(last.amount)+'، تاریخ '+last.date:'ابھی کوئی نئی انٹری نہیں');
+ const msg='محترم '+p.name+' صاحب!\n\nآپ کی امانت کا تازہ حساب درج ذیل ہے:\nکل جمع کروائی گئی امانت: '+money(t.deposits)+'\nاب تک واپس لی گئی رقم: '+money(t.withdrawals)+'\nباقی امانت: '+money(t.balance)+'\n\n'+update+'۔\n\nشکریہ، شاہکار خزانہ';
+ const number=phoneForLink(p.phone),encoded=encodeURIComponent(msg),url=channel==='whatsapp'?'https://wa.me/'+number+'?text='+encoded:'sms:'+number+'?body='+encoded;
+ window.open(url,'_system');
 }
 function addAmanatPerson(){closeModal('amanatModal');$('amanatPersonForm').reset();openModal('amanatPersonModal');}
 function saveAmanatPerson(e){e.preventDefault();const name=$('amanatPersonName').value.trim();if(!name){toast('امانت دار کا نام درج کریں');return;}const p={id:'p'+Date.now(),name,phone:normalizePakistanPhone($('amanatPersonPhone').value.trim())};db.people.push(p);save();closeModal('amanatPersonModal');renderPeople();toast('امانت دار محفوظ ہوگیا');openAmanatEntry('deposit',p.id);}
